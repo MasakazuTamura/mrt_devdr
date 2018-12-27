@@ -20,23 +20,23 @@ robsys2018 homework1
 
 ## 使用方法
 1. 任意のディレクトリにこのリポジトリをcloneする
-```
-$ git clone https://github.com/MasakazuTamura/mrt_devdr.git
-```
+	```
+	$ git clone https://github.com/MasakazuTamura/mrt_devdr.git
+	```
 1. 任意のディレクトリで enter_pocheee.sh を実行
-```
-$ bash enter_pocheee.sh
-```
+	```
+	$ bash enter_pocheee.sh
+	```
 1. 好きな入力をどうぞ, 例えば
-```
-$ echo 1 > /dev/myled0
-$ echo a > /dev/myled0
-$ echo F > /dev/myled0
-```
+	```
+	$ echo 1 > /dev/myled0
+	$ echo a > /dev/myled0
+	$ echo F > /dev/myled0
+	```
 1. 終わったら、任意のディレクトリで shigoto_nin.sh 実行
-```
-$ bash shigoto_nin.sh
-```
+	```
+	$ bash shigoto_nin.sh
+	```
 
 ## 動画
 
@@ -46,35 +46,34 @@ URL: https://youtu.be/AKpFtrsYF9M
 ### 動画概要
 LEDは左から2^3(赤), 2^2(黄), 2^1(赤), 2^0(黄)ビットと, sum_flag(赤)をそれぞれ意味する
 1. makeとかをする
-```
-$ cd mrt_devdr
-$ bash enter_pocheee.sh
-```
+	```
+	$ cd mrt_devdr
+	$ bash enter_pocheee.sh
+	```
 1. LEDチカチカ
 	1. 入れた数字を2進数で表示(表示モード)
-```
-$ echo 1 > /dev/myled0
-$ echo 2 > /dev/myled0
-$ echo 4 > /dev/myled0
-$ echo 8 > /dev/myled0
-$ echo 0 > /dev/myled0
-$ echo + > /dev/myled0
-```
+		```
+		$ echo 1 > /dev/myled0
+		$ echo 2 > /dev/myled0
+		$ echo 4 > /dev/myled0
+		$ echo 8 > /dev/myled0
+		$ echo 0 > /dev/myled0
+		$ echo + > /dev/myled0
+		```
 	1. 和算モードに切り替え
-```
-$ echo 3 > /dev/myled0
-```
+		```
+		$ echo 3 > /dev/myled0
+		```
 	1. 入れた数字を足してゆき、結果を2進数で表示(和算モード)
-```
-$ echo c > /dev/myled0
-$ echo 1 > /dev/myled0
-$ echo F > /dev/myled0
+		```
+		$ echo c > /dev/myled0
+		$ echo 1 > /dev/myled0
+		$ echo F > /dev/myled0
 	1. 表示モードに切り替え
-```
-$ echo q > /dev/myled0
-```
+		```
+		$ echo q > /dev/myled0
+		```
 1. make cleanとか
-```
-$ bash shigoto_nin.sh
-```
-
+	```
+	$ bash shigoto_nin.sh
+	```
