@@ -1,6 +1,6 @@
 /*
 myled.c
-This is Device driver to handle 4 LEDs for Raspberry Pi.
+This is Device driver to handle 5 LEDs for Raspberry Pi.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <linux/uaccess.h>
 #include <linux/io.h>
 
-#define COUNT_LED 4
-
 MODULE_AUTHOR("MasakazuTamura");
 MODULE_DESCRIPTION("driver for LED control");
 MODULE_LICENSE("GPL");
@@ -35,59 +33,81 @@ static struct cdev cdv;
 static struct class *cls = NULL;
 
 static volatile u32 *gpio_base = NULL;
-static int led_port[] = {25, 24, 23, 22};
+static int led_port[] = {25, 24, 23, 22, 21};
 
 static int calc = 0;
+static int flag_sum = 0;
 
 static ssize_t led_write(struct file* filp, const char* buf, size_t count, loff_t* pos)
 {
 	char c;
+	int input;
+	int *output;
+
 	if(copy_from_user(&c, buf, sizeof(char))){
 		return -EFAULT;
 	}
 
-	if(c < 0x30){
+	if(c == '+'){
+		calc = 0;
+		input = 0;
+		flag_sum = 1;
+	}else if(c == 'q'){
+		input = 0;
+		flag_sum = 0;
+	}else if(c < 0x30){
 		return -1;
 	}else if(c < 0x3A){
 		//0 to 9
-		calc += (int)c - 48;
+		input = (int)c - 48;
 	}else if(c < 0x41){
 		return -1;
 	}else if(c < 0x47){
 		//A to F
 		//10 to 15
-		calc += (int)c - 55;
+		input = (int)c - 55;
 	}else if(c < 0x61){
 		return -1;
 	}else if(c < 0x67){
 		//a to f
 		//10 to 15
-		calc += (int)c - 97;
+		input = (int)c - 87;
 	}else{
 		return -1;
 	}
 
-	calc %= 16;
+	if(flag_sum){
+		calc += input;
+		calc %= 16;
+		output = &calc;
+	}else{
+		output = &input;
+	}
 
-	if(!(calc & 8)){
+	if(!(*output & 8)){
 		gpio_base[10] = 1 << led_port[0];
 	}else{
 		gpio_base[7] = 1 << led_port[0];
 	}
-	if(!(calc & 4)){
+	if(!(*output & 4)){
 		gpio_base[10] = 1 << led_port[1];
 	}else{
 		gpio_base[7] = 1 << led_port[1];
 	}
-	if(!(calc & 2)){
+	if(!(*output & 2)){
 		gpio_base[10] = 1 << led_port[2];
 	}else{
 		gpio_base[7] = 1 << led_port[2];
 	}
-	if(!(calc & 1)){
+	if(!(*output & 1)){
 		gpio_base[10] = 1 << led_port[3];
 	}else{
 		gpio_base[7] = 1 << led_port[3];
+	}
+	if(!flag_sum){
+		gpio_base[10] = 1 << led_port[4];
+	}else{
+		gpio_base[7] = 1 << led_port[4];
 	}
 
 	//printk(KERN_INFO "led_write is called\n");
@@ -118,11 +138,14 @@ static struct file_operations led_fops = {
 
 static int __init init_mod(void)
 {
-	int retval, i;
+	int retval, i, led_count;
+
+	led_count = sizeof led_port / sizeof led_port[0];
+
 	//0x3f200000: base address, 0xA0: region to map
 	gpio_base = ioremap_nocache(0x3f200000, 0xA0);
 
-	for(i = 0; i < COUNT_LED; i++){
+	for(i = 0; i < led_count; i++){
 		const u32 led = led_port[i];
 		const u32 index = led / 10;			//GPFSEL2
 		const u32 shift = (led % 10) * 3;	//15bit
