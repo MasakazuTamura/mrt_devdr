@@ -35,79 +35,30 @@ static struct class *cls = NULL;
 static volatile u32 *gpio_base = NULL;
 static int led_port[] = {25, 24, 23, 22, 21};
 
-static int calc = 0;
-static int flag_sum = 0;
-
 static ssize_t led_write(struct file* filp, const char* buf, size_t count, loff_t* pos)
 {
 	char c;
-	int input;
-	int *output;
+	int i = 0;
 
 	if(copy_from_user(&c, buf, sizeof(char))){
 		return -EFAULT;
 	}
 
-	if(c == '+'){
-		calc = 0;
-		input = 0;
-		flag_sum = 1;
-	}else if(c == 'q'){
-		input = 0;
-		flag_sum = 0;
-	}else if(c < 0x30){
-		return -1;
-	}else if(c < 0x3A){
-		//0 to 9
-		input = (int)c - 48;
-	}else if(c < 0x41){
-		return -1;
-	}else if(c < 0x47){
-		//A to F
-		//10 to 15
-		input = (int)c - 55;
-	}else if(c < 0x61){
-		return -1;
-	}else if(c < 0x67){
-		//a to f
-		//10 to 15
-		input = (int)c - 87;
-	}else{
-		return -1;
-	}
-
-	if(flag_sum){
-		calc += input;
-		calc %= 16;
-		output = &calc;
-	}else{
-		output = &input;
-	}
-
-	if(!(*output & 8)){
-		gpio_base[10] = 1 << led_port[0];
-	}else{
-		gpio_base[7] = 1 << led_port[0];
-	}
-	if(!(*output & 4)){
-		gpio_base[10] = 1 << led_port[1];
-	}else{
-		gpio_base[7] = 1 << led_port[1];
-	}
-	if(!(*output & 2)){
-		gpio_base[10] = 1 << led_port[2];
-	}else{
-		gpio_base[7] = 1 << led_port[2];
-	}
-	if(!(*output & 1)){
-		gpio_base[10] = 1 << led_port[3];
-	}else{
-		gpio_base[7] = 1 << led_port[3];
-	}
-	if(!flag_sum){
-		gpio_base[10] = 1 << led_port[4];
-	}else{
-		gpio_base[7] = 1 << led_port[4];
+    if(c == 'N'){
+		for(i = 0; i < (sizeof led_port / sizeof led_port[0]); i++){
+			gpio_base[10] = 1 << led_port[i];
+		}
+	}else if(c == 'A'){
+		for(i = 0; i < (sizeof led_port / sizeof led_port[0]); i++){
+			gpio_base[7] = 1 << led_port[i];
+		}
+	}else if(c >= '0' && c <= '5'){
+		for(i = 0; i < (sizeof led_port / sizeof led_port[0]); i++){
+			if((c - '0') == i)
+				gpio_base[7] = 1 << led_port[c - '0'];
+			else
+				gpio_base[10] = 1 << led_port[i];
+		}
 	}
 
 	//printk(KERN_INFO "led_write is called\n");
@@ -115,25 +66,9 @@ static ssize_t led_write(struct file* filp, const char* buf, size_t count, loff_
 	return 1;
 }
 
-/*
-static ssize_t sushi_read(struct file* filp, char* buf, size_t count, loff_t* pos)
-{
-	int size = 0;
-	char sushi[] = {0xF0, 0x9F, 0x8D, 0xA3, 0x0A};
-	if(copy_to_user(buf + size, (const char *)sushi, sizeof(sushi))){
-		printk(KERN_INFO "sushi: copy_to_use failed\n");
-		return -EFAULT;
-	}
-	size += sizeof(sushi);
-
-	return size;
-}
-*/
-
 static struct file_operations led_fops = {
 	.owner = THIS_MODULE,
 	.write = led_write
-	//.read = sushi_read
 };
 
 static int __init init_mod(void)
